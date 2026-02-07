@@ -1,0 +1,36 @@
+{
+	"folders": {},
+	"connections": {
+		"postgres-jdbc-19081ae1b90-3a3fe08d26d1f8a": {
+			"provider": "postgresql",
+			"driver": "postgres-jdbc",
+			"name": "MNIT_internship",
+			"save-password": true,
+			"configuration": {
+				"host": "172.18.13.26",
+				"port": "5433",
+				"database": "MNIT_internship",
+				"url": "jdbc:postgresql://172.18.13.26:5433/MNIT_internship",
+				"configurationType": "MANUAL",
+				"home": "postgresql-x64-12",
+				"type": "dev",
+				"provider-properties": {},
+				"auth-model": "native"
+			}
+		}
+	},
+	"connection-types": {
+		"dev": {
+			"name": "Development",
+			"color": "255,255,255",
+			"description": "Regular development database",
+			"auto-commit": true,
+			"confirm-execute": false,
+			"confirm-data-change": false,
+			"smart-commit": false,
+			"smart-commit-recover": true,
+			"auto-close-transactions": true,
+			"close-transactions-period": 1800
+		}
+	}
+}
