@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: internship-backend
+    env: python
+    rootDir: backend/mnit/internship_portal
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: gunicorn internship_portal.wsgi:application
