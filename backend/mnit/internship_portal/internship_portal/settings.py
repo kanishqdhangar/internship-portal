@@ -89,7 +89,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Replace with your frontend origin
+    'http://localhost:3000', 'https://internship-portal-woad.vercel.app/' # Replace with your frontend origin
 ]
 
 ROOT_URLCONF = 'internship_portal.urls'
