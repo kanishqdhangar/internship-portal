@@ -48,7 +48,6 @@ const ApplicationStatus = () => {
   };
 
   const handleLogout = () => {
-    window.localStorage.setItem("isLoggedIn", false);
     navigate('/');
   };
 

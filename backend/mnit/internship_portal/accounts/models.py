@@ -1,35 +1,49 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser 
+from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
-# # Create your models here.
-# class Data(models.Model):
-#     FirstName = models.CharField(max_length = 20)
-#     LastName = models.CharField(max_length = 20)
-#     College = models.CharField(max_length = 50)
-#     Course = models.CharField(max_length = 50)
-#     Department = models.CharField(max_length = 20)
-#     Phone = models.CharField(max_length = 10)
-#     RollNo = models.CharField(max_length = 20)
-#     Adress = models.CharField(max_length = 200)
-#     Email = models.EmailField(max_length = 20)
-#     UserName = models.CharField(max_length = 20)
-#     Password = models.CharField(('password'), max_length=128)
 
 class CustomUser(AbstractUser):
+    """
+    Custom user model with OTP-based email verification.
+    """
 
-    # phone_number = models.CharField(max_length=15, blank=True, null=True)
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='customuser_set',  # Example related_name for groups
+    otp_verification = models.PositiveIntegerField(
+        null=True,
         blank=True,
+        help_text="6-digit OTP for email verification",
     )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='customuser_set',  # Example related_name for user_permissions
+
+    otp_expires_at = models.DateTimeField(
+        null=True,
         blank=True,
+        help_text="OTP expiration time",
     )
-    otp_verification = models.IntegerField(max_length=999999, null=True)
+
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether the user's email is verified",
+    )
+
+    def otp_is_valid(self, otp: int) -> bool:
+        """
+        Check if OTP matches and is not expired.
+        """
+        if not self.otp_verification or not self.otp_expires_at:
+            return False
+
+        if timezone.now() > self.otp_expires_at:
+            return False
+
+        return self.otp_verification == otp
+
+    def clear_otp(self):
+        """
+        Clear OTP after successful verification.
+        """
+        self.otp_verification = None
+        self.otp_expires_at = None
+        self.save(update_fields=["otp_verification", "otp_expires_at"])
 
     def __str__(self):
         return self.username
-    

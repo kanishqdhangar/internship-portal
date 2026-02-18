@@ -30,13 +30,23 @@ const Home = () => {
   const [i_id, seti_id] = useState(null);
   const [token, setToken] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState('');
-  const loggedIn = window.localStorage.getItem("isLoggedIn");
-  console.log(loggedIn, "login");
-  console.log(loggedInUser);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchInternships();
+  }, []);
+
+  useEffect(() => {
+    api
+      .get("/auth/me/", { withCredentials: true })
+      .then(res => {
+        setLoggedInUser(res.data.username);
+        setloggedinUserId(res.data.id);
+      })
+      .catch(() => {
+        setLoggedInUser(null);
+        setloggedinUserId(null);
+      });
   }, []);
 
   const fetchInternships = async () => {
@@ -91,7 +101,6 @@ const Home = () => {
           setLoggedInUser(response.data.username);
           setloggedinUserId(response.data.user_id);
           setShowLoginModal(false);
-          window.localStorage.setItem("isLoggedIn", true);
           if (response.data.status === 'staff') {
             alert("Log in as mentor");
             navigate(`/mentor/${response.data.user_id}/${response.data.username}`);
@@ -163,14 +172,17 @@ const Home = () => {
     setRecaptchaToken(token);
 };
 
-  
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout/", {}, { withCredentials: true });
+    } catch (err) {
+      console.log("Logout error", err);
+    }
     setLoggedInUser(null);
-    window.localStorage.setItem("isLoggedIn", false);
     setShowMyApplication(false);
     setShowRegistrationForm(false);
-    navigate('/');  };
-
+    navigate("/");
+  };
 
   const handleMyApplication = () => {
     setShowMyApplication(true);
@@ -442,9 +454,19 @@ const Home = () => {
                 </div>
                 
                 {loginErrors.password && <p className="text-sm text-red-500 mb-2">{loginErrors.password}</p>}
-                {loginErrors && <p className="text-sm text-red-500 mb-2">{loginErrors.error}</p>}
+                {loginErrors.non_field_errors && (
+                  <p className="text-sm text-red-500 mb-2">
+                    {loginErrors.non_field_errors[0]}
+                  </p>
+                )}
+
+                {loginErrors.error && (
+                  <p className="text-sm text-red-500 mb-2">
+                    {loginErrors.error}
+                  </p>
+                )}
                 <ReCAPTCHA
-                sitekey="6LeooCUqAAAAAH0H6t4_fq6JkNZ7BpINBCDZTzpx"
+                sitekey="6LcMBW8sAAAAAAJfePAjYHe4FJQwZ-FjmwFOqE1q"
                 onChange={handleRecaptchaChange}
              />
                 <button
@@ -543,7 +565,7 @@ const Home = () => {
 
                     <div className="my-3 flex justify-center">
                       <ReCAPTCHA
-                        sitekey="6LeooCUqAAAAAH0H6t4_fq6JkNZ7BpINBCDZTzpx"
+                        sitekey="6LcMBW8sAAAAAAJfePAjYHe4FJQwZ-FjmwFOqE1q"
                         onChange={handleRecaptchaChange}
                       />
                     </div>

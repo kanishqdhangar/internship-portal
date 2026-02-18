@@ -27,7 +27,7 @@ cloudinary.config(
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-DEBUG=False
+DEBUG=True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -51,6 +51,7 @@ CLOUDINARY_CLOUD_NAME= os.getenv("CLOUDINARY_CLOUD_NAME")
 # Application definition
 
 INSTALLED_APPS = [
+    'accounts.apps.AccountsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,7 +61,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
-    'accounts',
     'internship',
     'student_details',
     'corsheaders',
@@ -70,7 +70,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'accounts.authentication.CookieJWTAuthentication',
     ),
 }
 
@@ -89,9 +89,9 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000', 'https://internship-portal-woad.vercel.app/' # Replace with your frontend origin
+    'http://localhost:3000', 'https://internship-portal-woad.vercel.app' # Replace with your frontend origin
 ]
-
+CORS_ALLOW_CREDENTIALS = True
 ROOT_URLCONF = 'internship_portal.urls'
 
 TEMPLATES = [

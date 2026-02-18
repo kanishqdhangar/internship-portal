@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash, faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -37,9 +37,23 @@ const LoginRegistrationForm = ({ closeModal, setUser }) => {
       closeModal();
       navigate("/");
     } catch (err) {
-      setLoginErrors(
-        err.response?.data || { general: "Invalid credentials" }
-      );
+      const data = err.response?.data || {};
+
+      let generalMessage = "Invalid credentials";
+
+      if (data.non_field_errors) {
+        generalMessage = data.non_field_errors[0];
+      } else if (data.detail) {
+        generalMessage = data.detail;
+      } else if (data.error) {
+        generalMessage = data.error;
+      }
+
+      setLoginErrors({
+        username: data.username?.[0],
+        password: data.password?.[0],
+        general: generalMessage,
+      });
     }
   };
 
@@ -59,6 +73,10 @@ const LoginRegistrationForm = ({ closeModal, setUser }) => {
       );
     }
   };
+
+  useEffect(() => {
+    console.log("Updated loginErrors:", loginErrors);
+  }, [loginErrors]);
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
@@ -89,7 +107,9 @@ const LoginRegistrationForm = ({ closeModal, setUser }) => {
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
             {loginErrors.username && (
-              <p className="text-sm text-red-500">{loginErrors.username}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {loginErrors.username}
+              </p>
             )}
 
             <div className="relative">

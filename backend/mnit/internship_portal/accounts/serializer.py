@@ -1,74 +1,134 @@
 import random
+from django.utils import timezone
+from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
-from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomUser
 
 CustomUser = get_user_model()
 
+# =========================================================
+# Registration Serializer
+# =========================================================
+
 class DataSerializer(serializers.ModelSerializer):
+    """
+    Handles user registration and OTP generation.
+    """
 
     class Meta:
         model = CustomUser
-        fields = ('first_name', 'email', 'username', 'password', 'otp_verification')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = (
+            "first_name",
+            "email",
+            "username",
+            "password",
+            "otp_verification",
+        )
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "otp_verification": {"read_only": True},
+        }
 
     def create(self, validated_data):
+        otp = random.randint(100000, 999999)
 
         user = CustomUser.objects.create_user(
-            first_name=validated_data['first_name'],
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password'],
-            otp_verification = random.randint(100000,999999)
-            # phone_number=validated_data.get('phone_number', '')
+            first_name=validated_data["first_name"],
+            email=validated_data["email"],
+            username=validated_data["username"],
+            password=validated_data["password"],
+            otp_verification=otp,
         )
+
+        # User inactive until OTP verification
         user.is_active = False
+
+        # Optional but strongly recommended
+        if hasattr(user, "otp_expires_at"):
+            user.otp_expires_at = timezone.now() + timezone.timedelta(minutes=10)
+
         user.save()
         return user
-    
-from rest_framework import serializers
-from .models import CustomUser  # Import your CustomUser model
+
+
+# =========================================================
+# OTP Verification Serializer
+# =========================================================
 
 class OTPVerificationSerializer(serializers.Serializer):
+    """
+    Validates OTP without mutating database state.
+    DB updates should happen in the view.
+    """
     email = serializers.EmailField()
-    otp_verification = serializers.CharField()  # Accept OTP as a string
+    otp = serializers.CharField()
 
     def validate(self, data):
-        email = data.get('email')
-        otp_verification = data.get('otp_verification')
+        email = data["email"]
+        otp = data["otp"]
+
+        if not otp.isdigit():
+            raise serializers.ValidationError("OTP must be numeric")
 
         try:
-            # Attempt to convert otp_verification to an integer
-            otp_verification = int(otp_verification)
-        except ValueError:
-            raise serializers.ValidationError("OTP must be a numeric value.")
-
-        try:
-            # Retrieve the user by email
             user = CustomUser.objects.get(email=email)
-
-            # Check if the OTP matches
-            if user.otp_verification != otp_verification:
-                raise serializers.ValidationError("The provided OTP is incorrect.")
-
-            # If needed, update the user's status (e.g., mark as verified)
-            user.is_active = True
-            user.save()
-
         except CustomUser.DoesNotExist:
-            raise serializers.ValidationError("User with this email does not exist.")
+            raise serializers.ValidationError("Invalid OTP")
 
+        if user.otp_verification != int(otp):
+            raise serializers.ValidationError("Invalid OTP")
+
+        if hasattr(user, "otp_expires_at") and user.otp_expires_at:
+            if timezone.now() > user.otp_expires_at:
+                raise serializers.ValidationError("OTP expired")
+
+        data["user"] = user
         return data
 
-    
+
+# =========================================================
+# Login Serializer
+# =========================================================
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
-    password = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = authenticate(
+            username=data.get("username"),
+            password=data.get("password"),
+        )
+
+        if not user:
+            raise serializers.ValidationError("Invalid credentials")
+
+        if not user.is_active:
+            raise serializers.ValidationError("Account not verified")
+
+        data["user"] = user
+        return data
+
+
+# =========================================================
+# User Profile Serializer
+# =========================================================
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'first_name', 'is_active', 'is_staff', 'is_superuser']
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+        ]
+        read_only_fields = ["is_staff", "is_superuser", "is_active"]
+
+
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["is_active", "is_staff"]

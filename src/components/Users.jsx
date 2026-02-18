@@ -15,7 +15,7 @@ const UserPage = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/auth/users/", {
+      const res = await api.get("/auth/admin/users/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,8 +37,8 @@ const UserPage = () => {
 
   const updateUserStatus = async (user) => {
     try {
-      await api.put(
-        `/auth/users/${user.id}/`,
+      await api.patch(
+        `/auth/admin/users/${user.id}/`,
         { is_active: !user.is_active },
         {
           headers: {
@@ -80,7 +80,16 @@ const UserPage = () => {
   return (
     <div className="min-h-screen bg-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">Users</h1>
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 text-sm"
+          >
+            ← Back
+          </button>
+
+          <h1 className="text-2xl font-semibold">Users</h1>
+        </div>
 
         <div className="overflow-x-auto bg-white rounded-xl shadow">
           <table className="min-w-full text-sm">
