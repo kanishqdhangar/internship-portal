@@ -94,23 +94,6 @@ This ensures:
 
 ---
 
-## Project Structure
-
-backend/
-    mnit/
-        internship_portal/
-            accounts/
-            internship/
-            student_details/
-            internship_portal/ (Django settings)
-
-frontend/
-    src/
-    components/
-    pages/
-
----
-
 # Backend Setup (Django)
 
 ## 1. Clone Repository
