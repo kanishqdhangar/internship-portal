@@ -283,9 +283,6 @@ const Home = () => {
             </span>
 
             <ul className="hidden md:flex gap-6 text-sm">
-              <li onClick={handleHome} className="cursor-pointer hover:underline">
-                Home
-              </li>
               {loggedInUser && (
                 <li
                   onClick={handleMyApplication}
