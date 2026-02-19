@@ -142,11 +142,11 @@ const Home = () => {
         subject: 'Welcome to Our Service!',
         message: `Dear ${signupData.first_name},\n\nThank you for signing up! We're excited to have you on board.\n\nBest regards,\nThe Team`
     };
-          api.post("/auth/signup/", {...signupData, recaptchaToken: recaptchaToken})
+          api.post("/auth/register/", {...signupData, recaptchaToken: recaptchaToken})
             .then(response => {
               console.log('Signup response:', response.data);
               setSignupData({ first_name: '', username: '', password: '', email: ''});
-              api.post("/auth/send-email/", emailData)
+              api.post("/utils/send-email/", emailData)
         .then(response => {
             console.log('Email sent response:', response.data);
             alert('Email sent successfully!');

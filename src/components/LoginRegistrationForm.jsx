@@ -64,7 +64,7 @@ const LoginRegistrationForm = ({ closeModal, setUser }) => {
     setSignupErrors({});
 
     try {
-      await api.post("/auth/signup/", signupData);
+      await api.post("/auth/register/", signupData);
       alert("Signup successful! Please login.");
       setIsSignup(false);
     } catch (err) {
