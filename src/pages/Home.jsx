@@ -244,18 +244,21 @@ const Home = () => {
 
   const handleOtpVerification = async (e) => {
     e.preventDefault();
+
     try {
-      api.post("/auth/verify-otp/", {otpData})
-      .then(response => {
-        setIsOtpVerified(true);
-        setOtpSent(false);
-        setShowSignupPage(false);
-        alert('Signup successful! Please log in.');
-        setShowLoginModal(true);
-      })
-      
+      const response = await api.post("/auth/verify-otp/", {
+        email: otpData.email,
+        otp: otpData.otp_verification, // or otpData.otp if you rename it
+      });
+
+      setIsOtpVerified(true);
+      setOtpSent(false);
+      setShowSignupPage(false);
+      alert("Signup successful! Please log in.");
+      setShowLoginModal(true);
+
     } catch (error) {
-      setOtpErrors('Invalid OTP');
+      setOtpErrors("Invalid OTP");
     }
   };
 
