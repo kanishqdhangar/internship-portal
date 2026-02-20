@@ -28,6 +28,12 @@ class DataSerializer(serializers.ModelSerializer):
             "otp_verification": {"read_only": True},
         }
 
+    # ✅ Prevent duplicate emails
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already registered.")
+        return value
+
     def create(self, validated_data):
         otp = random.randint(100000, 999999)
 
@@ -39,12 +45,11 @@ class DataSerializer(serializers.ModelSerializer):
             otp_verification=otp,
         )
 
-        # User inactive until OTP verification
+        # Make inactive until verified
         user.is_active = False
 
-        # Optional but strongly recommended
-        if hasattr(user, "otp_expires_at"):
-            user.otp_expires_at = timezone.now() + timezone.timedelta(minutes=10)
+        # Set OTP expiry (10 minutes)
+        user.otp_expires_at = timezone.now() + timezone.timedelta(minutes=10)
 
         user.save()
         return user
@@ -56,8 +61,8 @@ class DataSerializer(serializers.ModelSerializer):
 
 class OTPVerificationSerializer(serializers.Serializer):
     """
-    Validates OTP without mutating database state.
-    DB updates should happen in the view.
+    Validates OTP safely.
+    Database state changes should be done in the view.
     """
     email = serializers.EmailField()
     otp = serializers.CharField()
@@ -69,17 +74,17 @@ class OTPVerificationSerializer(serializers.Serializer):
         if not otp.isdigit():
             raise serializers.ValidationError("OTP must be numeric")
 
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
+        # ✅ Use filter().first() to prevent MultipleObjectsReturned crash
+        user = CustomUser.objects.filter(email=email).first()
+
+        if not user:
             raise serializers.ValidationError("Invalid OTP")
 
         if user.otp_verification != int(otp):
             raise serializers.ValidationError("Invalid OTP")
 
-        if hasattr(user, "otp_expires_at") and user.otp_expires_at:
-            if timezone.now() > user.otp_expires_at:
-                raise serializers.ValidationError("OTP expired")
+        if user.otp_expires_at and timezone.now() > user.otp_expires_at:
+            raise serializers.ValidationError("OTP expired")
 
         data["user"] = user
         return data
@@ -127,6 +132,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["is_staff", "is_superuser", "is_active"]
 
+
+# =========================================================
+# Admin Update Serializer
+# =========================================================
 
 class AdminUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:

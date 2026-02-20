@@ -25,5 +25,4 @@ urlpatterns = [
     path("auth/admin/users/<int:pk>/", UserManageView.as_view(), name="admin-user-manage"),
     # Utility
     path("utils/send-email/", SendEmailView.as_view(), name="send-email"),
-
 ]

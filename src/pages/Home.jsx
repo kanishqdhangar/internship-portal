@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import api from "../utils/api";
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -31,6 +31,8 @@ const Home = () => {
   const [token, setToken] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const navigate = useNavigate();
+  const loginRecaptchaRef = useRef(null);
+  const signupRecaptchaRef = useRef(null);
 
   useEffect(() => {
     fetchInternships();
@@ -121,6 +123,9 @@ const Home = () => {
           } else {
             setLoginErrors({ general: 'Invalid username or password' });
           }
+
+          loginRecaptchaRef.current?.reset();
+          setRecaptchaToken('');
         });
         console.log(loginErrors);
     }
@@ -145,8 +150,8 @@ const Home = () => {
           api.post("/auth/register/", {...signupData, recaptchaToken: recaptchaToken})
             .then(response => {
               console.log('Signup response:', response.data);
-              setSignupData({ first_name: '', username: '', password: '', email: ''});
-              api.post("/utils/send-email/", emailData)
+              setSignupData({ first_name: '', username: '', password: '', email: ''})
+              //api.post("/utils/send-email/", emailData)
         .then(response => {
             console.log('Email sent response:', response.data);
             alert('Email sent successfully!');
@@ -154,8 +159,11 @@ const Home = () => {
             setOtpData({ email: signupData.email });
         })
         .catch(error => {
-            console.error('Error sending email:', error);
-            alert('There was an error sending the email. Please try again.');
+          console.error('Error sending email:', error);
+          alert('There was an error sending the email. Please try again.');
+
+          signupRecaptchaRef.current?.reset();
+          setRecaptchaToken('');
         });
             })
             .catch(error => {
@@ -164,6 +172,9 @@ const Home = () => {
               } else {
                 setSignupErrors({ general: 'Signup error. Please try again.' });
               }
+
+              signupRecaptchaRef.current?.reset();
+              setRecaptchaToken('');
             });
   };
 
@@ -259,6 +270,7 @@ const Home = () => {
 
     } catch (error) {
       setOtpErrors("Invalid OTP");
+      setShowSignupPage(true);
     }
   };
 
@@ -466,6 +478,7 @@ const Home = () => {
                   </p>
                 )}
                 <ReCAPTCHA
+                ref={loginRecaptchaRef}
                 sitekey="6LcMBW8sAAAAAAJfePAjYHe4FJQwZ-FjmwFOqE1q"
                 onChange={handleRecaptchaChange}
              />
@@ -565,6 +578,7 @@ const Home = () => {
 
                     <div className="my-3 flex justify-center">
                       <ReCAPTCHA
+                        ref={signupRecaptchaRef}
                         sitekey="6LcMBW8sAAAAAAJfePAjYHe4FJQwZ-FjmwFOqE1q"
                         onChange={handleRecaptchaChange}
                       />

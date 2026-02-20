@@ -80,23 +80,24 @@ class VerifyOTPView(APIView):
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data["email"]
-        otp = serializer.validated_data["otp"]
+        otp = int(serializer.validated_data["otp"])
 
         try:
             user = CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
             return Response({"error": "Invalid OTP"}, status=400)
 
-        if user.otp != otp:
+        if user.otp_verification != otp:
             return Response({"error": "Invalid OTP"}, status=400)
 
         if user.otp_expires_at and timezone.now() > user.otp_expires_at:
             return Response({"error": "OTP expired"}, status=400)
 
         user.is_verified = True
-        user.otp = None
+        user.is_active = True
+        user.otp_verification = None
         user.otp_expires_at = None
-        user.save(update_fields=["is_verified", "otp", "otp_expires_at"])
+        user.save(update_fields=["is_verified", "is_active", "otp_verification", "otp_expires_at"])
 
         return Response({"message": "OTP verified successfully"}, status=200)
 
@@ -163,7 +164,8 @@ class RegisterView(generics.CreateAPIView):
             try:
                 send_email_via_gas(
                     user_email,
-                    "Verify your account",
+                    "Hi",
+                    f"Excited to have you onboard, kidly verify your account",
                     f"Your OTP is: {otp}",
                 )
             except Exception:

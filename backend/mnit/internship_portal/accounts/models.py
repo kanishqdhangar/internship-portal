@@ -7,6 +7,7 @@ class CustomUser(AbstractUser):
     """
     Custom user model with OTP-based email verification.
     """
+    email = models.EmailField(unique=True)
 
     otp_verification = models.PositiveIntegerField(
         null=True,
