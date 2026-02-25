@@ -21,11 +21,9 @@ class DataSerializer(serializers.ModelSerializer):
             "email",
             "username",
             "password",
-            "otp_verification",
         )
         extra_kwargs = {
             "password": {"write_only": True},
-            "otp_verification": {"read_only": True},
         }
 
     # ✅ Prevent duplicate emails

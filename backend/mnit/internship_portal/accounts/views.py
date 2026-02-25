@@ -155,23 +155,23 @@ class RegisterView(generics.CreateAPIView):
         if not verify_recaptcha(request.data.get("recaptchaToken")):
             return Response({"error": "Invalid reCAPTCHA"}, status=400)
 
-        response = super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-        user_email = request.data.get("email")
-        otp = response.data.get("otp_verification")
+        try:
+            send_email_via_gas(
+                user.email,
+                "Verify your account",
+                f"Your OTP is: {user.otp_verification}. It expires in 10 minutes.",
+            )
+        except Exception as e:
+            print("Email sending failed:", e)
 
-        if user_email and otp:
-            try:
-                send_email_via_gas(
-                    user_email,
-                    "Hi",
-                    f"Excited to have you onboard, kidly verify your account",
-                    f"Your OTP is: {otp}",
-                )
-            except Exception:
-                pass  # Log silently; do not fail registration
-
-        return response
+        return Response(
+            {"message": "User registered. OTP sent to email."},
+            status=201
+        )
 
 
 # =========================================================

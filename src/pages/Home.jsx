@@ -141,41 +141,43 @@ const Home = () => {
     } 
   };
 
-  const handleSendEmail = () => {
-    const emailData = {
-        email: signupData.email,  
-        subject: 'Welcome to Our Service!',
-        message: `Dear ${signupData.first_name},\n\nThank you for signing up! We're excited to have you on board.\n\nBest regards,\nThe Team`
-    };
-          api.post("/auth/register/", {...signupData, recaptchaToken: recaptchaToken})
-            .then(response => {
-              console.log('Signup response:', response.data);
-              setSignupData({ first_name: '', username: '', password: '', email: ''})
-              //api.post("/utils/send-email/", emailData)
-        .then(response => {
-            console.log('Email sent response:', response.data);
-            alert('Email sent successfully!');
-            setOtpSent(true);
-            setOtpData({ email: signupData.email });
-        })
-        .catch(error => {
-          console.error('Error sending email:', error);
-          alert('There was an error sending the email. Please try again.');
+  const handleSendEmail = async (e) => {
+    e.preventDefault();
 
-          signupRecaptchaRef.current?.reset();
-          setRecaptchaToken('');
-        });
-            })
-            .catch(error => {
-              if (error.response && error.response.data) {
-                setSignupErrors(error.response.data);
-              } else {
-                setSignupErrors({ general: 'Signup error. Please try again.' });
-              }
+    const errors = validateSignup();
+    setSignupErrors(errors);
 
-              signupRecaptchaRef.current?.reset();
-              setRecaptchaToken('');
-            });
+    if (Object.keys(errors).length !== 0) return;
+
+    if (!recaptchaToken) {
+      alert("Please complete the reCAPTCHA");
+      return;
+    }
+
+    try {
+      const response = await api.post("/auth/register/", {
+        ...signupData,
+        recaptchaToken,
+      });
+
+      console.log("Signup success:", response.data);
+
+      setOtpSent(true);                     // 🔥 SWITCH TO OTP SCREEN
+      setOtpData({ email: signupData.email, otp_verification: "" });
+      setSignupErrors({});
+      setRecaptchaToken("");
+      signupRecaptchaRef.current?.reset();
+
+    } catch (error) {
+      if (error.response?.data) {
+        setSignupErrors(error.response.data);
+      } else {
+        setSignupErrors({ general: "Signup error. Please try again." });
+      }
+
+      signupRecaptchaRef.current?.reset();
+      setRecaptchaToken("");
+    }
   };
 
 
@@ -244,7 +246,7 @@ const Home = () => {
 
   const [otpSent, setOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [otpData, setOtpData] = useState({ email: [], otp_verification: [] });
+  const [otpData, setOtpData] = useState({ email: "", otp_verification: "" });
   const [otpErrors, setOtpErrors] = useState('');
 
   const handleOtpChange = (e) => {
@@ -520,7 +522,7 @@ const Home = () => {
                     Create Account
                   </h2>
                   <div id='recaptcha-container'></div>
-                  <form onSubmit={handleSignup}>
+                  <form onSubmit={handleSendEmail}>
                     <input
                       type="text"
                       name="first_name"
@@ -569,7 +571,6 @@ const Home = () => {
                     {/* Send Email Button to Trigger OTP */}
                     <button
                       type="submit"
-                      onClick={handleSendEmail}
                       className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 mt-3"
                     >
                       Send OTP
