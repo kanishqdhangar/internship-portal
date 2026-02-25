@@ -85,7 +85,7 @@ const ViewApplicationsPage = () => {
           },
         }
       );
-
+      alert("Status Updated Successfully");
       fetchApplications();
     } catch (err) {
       console.error("Update status error:", err);

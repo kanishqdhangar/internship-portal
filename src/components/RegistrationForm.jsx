@@ -125,6 +125,7 @@ const RegistrationForm = ({ closeModal, userId, iId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; 
     setIsSubmitting(true);
 
     const errors = validate();
@@ -249,8 +250,33 @@ const RegistrationForm = ({ closeModal, userId, iId }) => {
           </div>
 
 
-          <input type="file" name="resume" accept="application/pdf" onChange={handleFileChange} required />
-          <input type="file" name="id_card" accept="application/pdf" onChange={handleFileChange} required />
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">
+              Upload Resume (PDF only)
+            </label>
+            <input
+              type="file"
+              name="resume"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              className="w-full border rounded-lg px-3 py-2"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">
+              Upload ID Card (PDF only)
+            </label>
+            <input
+              type="file"
+              name="id_card"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              className="w-full border rounded-lg px-3 py-2"
+              required
+            />
+          </div>
 
           <textarea
             name="addskills"
@@ -260,10 +286,14 @@ const RegistrationForm = ({ closeModal, userId, iId }) => {
           />
 
           <button
+            type="submit"
             disabled={isSubmitting}
-            className="md:col-span-2 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+            className={`md:col-span-2 py-2 rounded text-white transition 
+              ${isSubmitting 
+                ? "bg-gray-400 cursor-not-allowed" 
+                : "bg-indigo-600 hover:bg-indigo-700"}`}
           >
-            Register
+            {isSubmitting ? "Submitting..." : "Register"}
           </button>
         </form>
       </div>
